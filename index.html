@@ -1,0 +1,219 @@
+<html>
+
+<head>
+    <title>Vue.js Pet Store</title>
+    <script src="https://unpkg.com/vue"></script>
+    <script src="products.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="manifest" href="petstore.webmanifest">
+    <link rel="stylesheet" href="style.css">
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js');
+        };
+    </script>
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <h1 v-text="sitename"></h1>
+            <button @click="showCheckout">{{cartItemCount}}
+                <span class="fa fa-cart-plus"></span> Checkout </button>
+        </header>
+        <main>
+            <div v-if='showProduct'>
+                <div v-for="product in products">
+                    <h2 v-text="product.title"></h2>
+                    <figure>
+                        <img v-bind:src="product.image">
+                    </figure>
+                    <!-- <p v-text="product.description"></p> -->
+                    <p v-html="product.description"></p>
+                    <p>Price: {{product.price}}</p>
+
+
+                    <button @click='addToCart(product)' v-if='canAddToCart(product)'>Add to Cart</button>
+
+                    <button disabled="disabled" v-else>Add to Cart</button>
+
+                    <span v-if='product.availableInventory === cartItemCount'>Sold Out!</span>
+                    <span v-else-if="product.availableInventory - cartItemCount < 5">
+                        Only {{product.availableInventory - cartItemCount}} left!!
+                    </span>
+                    <span v-else>Buy Now!</span>
+
+                    <div>
+                        <span v-for='n in product.rating'>★</span>
+                        <span v-for='n in 5-product.rating'>☆</span>
+                    </div>
+                </div>
+
+            </div>
+            <div v-else>
+                <h2>Checkout</h2>
+                <p>
+                    <strong>First Name: </strong>
+                    <!-- This input field is bound to 'firstName' in the 'order' object -->
+                    <input v-model="order.firstName">
+                </p>
+                <p>
+                    <strong>Last Name: </strong>
+                    <!-- This input field is bound to 'lastName' in the 'order' object -->
+                    <input v-model="order.lastName">
+                </p>
+                <p>
+                    <strong>Address: </strong>
+                    <input v-model="order.address">
+                </p>
+                <p>
+                    <strong>City: </strong>
+                    <input v-model="order.city">
+                </p>
+                <p>
+                    <strong>State: </strong>
+                    <select v-model="order.state">
+                        <option disabled value="">State</option>
+                        <option v-for="(state, key) in states" v-bind:value="state">
+                            {{state}}
+                        </option>
+                        <!-- <option v-bind:value="states.AL">AL</option>
+                    <option v-bind:value="states.AR">AR</option>
+                    <option v-bind:value="states.CA">CA</option>
+                    <option v-bind:value="states.NV">NV</option> -->
+                    </select>
+                </p>
+                <p>
+                    <strong>Zip / Postal Code:</strong>
+                    <input v-model.number="order.zip" type="number" />
+                </p>
+
+                <p>
+                    <input type="checkbox" id="gift" value="true" v-model="order.gift"
+                        v-bind:true-value="order.sendGift" v-bind:false-value="order.dontSendGift">
+                    <label for="gift">Ship As Gift?</label>
+                </p>
+
+                <p>
+                    <input type="radio" id="home" value="Home" v-model="order.method">
+                    <label for="home">Home</label>
+                </p>
+                <p>
+                    <input type="radio" id="business" value="Business" v-model="order.method">
+                    <label for="business">Business</label>
+                </p>
+
+                <h2>Order Information</h2>
+                <p>First Name: {{order.firstName}}</p>
+                <p>Last Name: {{order.lastName}}</p>
+                <p>Address: {{order.address}}</p>
+                <p>City: {{order.city}}</p>
+                <p>Zip: {{order.zip}}</p>
+                <p>State: {{order.state}}</p>
+                <p>Gift? {{order.gift}}</p>
+                <p>Method: {{order.method}}</p>
+
+                <button v-on:click="submitForm">Place Order</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        var webstore = new Vue({
+            el: '#app',
+            data: {
+                showProduct: true,
+                sitename: 'Vue.js Pet Depot',
+                // store: [], //array to store itemsin cart
+                cart: [], //creation of an emty array called cart
+                states: ['Alaska', 'Alabama', 'Arizona', 'Carlifonia', 'Nevada'],
+                order: {
+                    firstName: "",
+                    lastName: "",
+                    address: "",
+                    city: "",
+                    zip: "",
+                    state: "",
+                    gift: false,
+                    sendGift: 'Send as a gift ',
+                    dontSendGift: 'Do not send as a gift',
+                    method: 'Home'
+                },
+                // states: {
+                //     AK: 'Alaska',
+                //     Al: 'Alabama',
+                //     AR: 'Arizona',
+                //     CA: 'California',
+                //     NV: 'Nevada'
+                // },
+                products: products,
+                // product: {
+                //     id: 1001,
+                //     title: "Cat Food, 25lb bag",
+                //     description: "A 25 pound bag of <em>irresistible</em>," + "organic goodness for your cat.",
+                //     price: 2000,
+                //     image: "images/product-fullsize.png",
+                //     availableInventory: 10, //was 5
+                //     rating: 1
+                // },
+            },
+            methods: {
+                addToCart: function (product) {
+                    // product id (in this case 1001) will be stored in the cart array
+                    this.cart.push(product.id);
+                    // console.log('test');
+                    // console.log(this.store);
+                },
+                addToCheckOutCart(product) {
+                    this.addToCheckOutCart.push(product);
+                },
+                showCheckout: function () {
+                    this.showProduct = this.showProduct ? false : true;
+                },
+                submitForm() {
+                    alert('order has been placed')
+                },
+                //Remove canAddToCart from Computed to Method since computed does not take parameters, 
+                //We are now working with an array of objects and therefore need to pass the product
+                //and its ID to identify which product we are working with
+                canAddToCart: function (product) {
+                    return product.availableInventory > this.cartCount(product.id);
+                },
+                //We introduce the cartCount Method to count the number of items of a particular type in the cart
+                cartCount(id) {
+                    let count = 0;
+                    for (let i = 0; i < this.cart.length; i++) {
+                        if (this.cart[i] === id) {
+                            count++
+                        }
+                    }
+                    return count;
+                },
+                computed: {
+                    cartItemCount: function () {
+                        return this.cart.length; //I used store instead of cart
+                    },
+                    // canAddToCart: function (product) {
+                    //     return this.products.availableInventory > this.cartItemCount;
+                    // }
+                },
+                //We are sorting products by price
+            sortedProducts() {
+                let productsArray = this.products.slice(0);
+
+                function compare(a, b) {
+                    if (a.price > b.price)
+                        return 1;
+                    if (a.price < b.price)
+                        return -1;
+                    return 0;
+                }
+                return productsArray.sort(compare);
+            }
+            }
+        });
+    </script>
+</body>
+
+</html>
